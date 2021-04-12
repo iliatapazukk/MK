@@ -1,54 +1,77 @@
-// const player1 = {
-//   name: 'player1',
-//   hp: 100,
-//   img: 'string',
-//   weapon: [
-//     'revolver',
-//     'branch',
-//     'stone',
-//   ],
-//   attack: () => {
-//     console.log(player1.name + ' ' + 'Fight...')
-//   }
-// }
-// console.log(player1)
-let createElm;
-createElm = () => document.createElement('div')
-
-function createPlayer(id, name, life){
-  const $player1 = createElm()
-  $player1.classList.add(id)
-
-  const $progressbar = createElm()
-  $progressbar.classList.add('progressbar')
-
-  const $character = createElm()
-  $character.classList.add('character')
-
-  const $characterImg = document.createElement('img')
-  $characterImg.setAttribute('src', `http://reactmarathon-api.herokuapp.com/assets/${name}.gif`)
-
-  $character.appendChild($characterImg)
-
-  $player1.appendChild($progressbar)
-  $player1.appendChild($character)
-
-  const $life = createElm()
-  $life.classList.add('life')
-  $life.style.width = `${life}%`;
-
-  const $name = createElm()
-  $name.classList.add('name')
-  $name.innerText = name
-
-  $progressbar.appendChild($life)
-  $progressbar.appendChild($name)
-
-  const $root = document.querySelector('.arenas')
-  $root.appendChild($player1)
+function createElm(tag, className){
+  const $tag = document.createElement(tag);
+  if (className){
+    $tag.classList.add(className);
+  }
+  return $tag;
 }
-const player1 = {id: 'player1', name: 'sonya', life: 50}
-const player2 = {id: 'player2', name: 'subzero', life: 80}
 
-createPlayer(player1.id, player1.name, player1.life);
-createPlayer(player2.id, player2.name, player2.life);
+function createPlayer(playerObj){
+  const $player = createElm('div', `player${playerObj.player}`)
+  const $progressbar = createElm('div', 'progressbar')
+  const $character = createElm('div', 'character')
+  const $characterImg = document.createElement('img')
+  $characterImg.setAttribute('src', `http://reactmarathon-api.herokuapp.com/assets/${playerObj.name}.gif`)
+
+  $character.appendChild($characterImg);
+  $player.appendChild($progressbar);
+  $player.appendChild($character);
+
+  const $life = createElm('div', 'life');
+  $life.style.width = `${playerObj.hp}%`;
+
+  const $name = createElm('div', 'name');
+  $name.innerText = playerObj.name;
+
+  $progressbar.appendChild($life);
+  $progressbar.appendChild($name);
+
+  return $player;
+}
+
+const player1 = {
+  player: 1,
+  name: 'sonya',
+  hp: 100
+}
+const player2 = {
+  player: 2,
+  name: 'subzero',
+  hp: 100
+}
+
+const $arenas = document.querySelector('.arenas');
+$arenas.appendChild(createPlayer(player1));
+$arenas.appendChild(createPlayer(player2));
+
+function playerWins(name){
+ const $winsTitle = createElm('div', 'loseTitle');
+ $winsTitle.innerText = `${name} wins`
+ return $winsTitle;
+}
+
+const $randomBtn = document.querySelector('.button');
+
+function changeHP(player) {
+  const $playerLife = document.querySelector(`.player${player.player} .life`)
+  player.hp -= Math.ceil(Math.random() * 40);
+  if (player.hp <= 0) {
+    player.hp = 0
+    $randomBtn.disabled = true
+  }
+  $playerLife.style.width = player.hp + '%';
+}
+
+
+$randomBtn.addEventListener('click', () => {
+  changeHP(player1)
+  changeHP(player2)
+
+  if (player1.hp <= 0) {
+    $arenas.appendChild(playerWins(player2.name));
+  } else if (player2.hp <= 0) {
+    $arenas.appendChild(playerWins(player1.name));
+  }
+
+})
+
