@@ -35,7 +35,6 @@ function elHP(){
   return document.querySelector('.player' + this.player + ' .life');
 }
 
-
 function getRandom(num) {
   return Math.ceil(Math.random() * num);
 }
@@ -48,7 +47,6 @@ function changeHP(changeHP) {
   this.hp -= changeHP;
   if (this.hp <= 0) {
     this.hp = 0
-    console.log('HP ZERO', this.hp)
   }
   return this.hp;
 }
@@ -58,17 +56,17 @@ const player1 = {
   player: 1,
   name: 'sonya',
   hp: 100,
-  elHP: elHP,
-  changeHP: changeHP,
-  renderHP: renderHP,
+  elHP,
+  changeHP,
+  renderHP,
 }
 const player2 = {
   player: 2,
   name: 'subzero',
   hp: 100,
-  elHP: elHP,
-  changeHP: changeHP,
-  renderHP: renderHP,
+  elHP,
+  changeHP,
+  renderHP,
 }
 
 $arenas.appendChild(createPlayer(player1));
@@ -84,16 +82,42 @@ function showResultText(name){
  return $winsTitle;
 }
 
-const $randomBtn = document.querySelector('.button');
+const $formFight = document.querySelector('.control')
 
-$randomBtn.addEventListener('click', function() {
-  player1.changeHP(getRandom(20))
-  player2.changeHP(getRandom(20))
-  player1.renderHP();
-  player2.renderHP();
+const HIT = {
+  head: 30,
+  body: 25,
+  foot: 20,
+}
+const ATTACK = ['head', 'body', 'foot'];
 
-  if (player1.hp === 0 || player2.hp === 0) { $randomBtn.disabled = true }
+function createReloadButton() {
+  const $reloadBtnWrapper = createElm('div', 'reloadWrap');
+  const $reloadBtn = createElm('button', 'button');
+  $reloadBtn.innerText = 'Reload';
 
+  $reloadBtn.addEventListener('click', () => {
+    window.location.reload()
+  })
+
+  $reloadBtnWrapper.appendChild($reloadBtn);
+  $arenas.appendChild($reloadBtnWrapper)
+}
+
+function enemyAttack () {
+  const hit = ATTACK[getRandom(3) - 1]
+  const defence = ATTACK[getRandom(3) - 1]
+  return {
+    value: getRandom(HIT[hit]),
+    hit,
+    defence,
+  }
+}
+
+const $randomBtn = document.querySelector('.buttonWrap .button');
+const $form = document.querySelector('.control');
+
+function showResult() {
   if (player1.hp === 0 && player1.hp < player2.hp) {
     $arenas.appendChild(showResultText(player2.name));
   } else if (player2.hp === 0 && player2.hp < player1.hp) {
@@ -102,4 +126,87 @@ $randomBtn.addEventListener('click', function() {
     $arenas.appendChild(showResultText());
   }
 
+  if (player1.hp === 0 || player2.hp === 0) {
+    $randomBtn.disabled = true;
+    $form.remove()
+    createReloadButton();
+  }
+}
+
+function playerAttack () {
+  const attack = {}
+  for (let item of $formFight){
+    if(item.checked && item.name === 'hit'){
+      attack.value = getRandom(HIT[item.value])
+      attack.hit = item.value
+    }
+    if(item.checked && item.name === 'defence'){
+      attack.defence = item.value
+    }
+    item.checked = false;
+  }
+  return attack
+}
+
+const $chat = document.querySelector('.chat');
+const date = new Date();
+const actionDate = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ':'
+console.log(actionDate)
+
+function generateLogs(type, player1, player2) {
+  let text;
+  switch (type) {
+    case 'hit':
+      text = logs['hit'][getRandom(18)].replace(
+        '[playerKick]',
+        '<b style="text-transform: uppercase">' + player1.name + '</b>'
+      ).replace(
+        '[playerDefence]',
+        '<b style="text-transform: uppercase">' + player2.name + '</b>'
+      );
+      break;
+    case 'start':
+      text = logs['start'].replace(
+        '[time]',
+        '<b style="text-transform: uppercase">' + actionDate + '</b>'
+      ).replace(
+        '[player1]',
+        '<b style="text-transform: uppercase">' + player1.name + '</b>'
+      ).replace(
+        '[player2]',
+        '<b style="text-transform: uppercase">' + player2.name + '</b>'
+      );
+      break;
+  }
+  const el = '<p>'+text+'</p>';
+  $chat.insertAdjacentHTML('afterbegin', el)
+}
+
+let started = true
+if (started) {
+  generateLogs('start', player1, player2);
+}
+
+$formFight.addEventListener('submit', function (event){
+  event.preventDefault();
+
+  started = false
+  const enemy = enemyAttack()
+  const player = playerAttack()
+
+  if (player1.defence !== enemy.hit){
+    player1.changeHP(enemy.value);
+    player1.renderHP();
+    generateLogs('hit', player2, player1);
+  }
+
+  if (enemy.defence !== player.hit){
+    player1.changeHP(player.value);
+    player1.renderHP();
+    generateLogs('hit', player1, player2);
+  }
+
+  player2.renderHP();
+
+  showResult();
 })
