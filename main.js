@@ -78,6 +78,7 @@ function showResultText(name){
    $winsTitle.innerText = `${name} wins`
  } else {
    $winsTitle.innerText = `draw`
+   generateLogs('draw')
  }
  return $winsTitle;
 }
@@ -157,25 +158,30 @@ function generateLogs(type, player1, player2) {
   let text;
   switch (type) {
     case 'hit':
-      text = logs['hit'][getRandom(18)].replace(
-        '[playerKick]',
-        '<b style="text-transform: uppercase">' + player1.name + '</b>'
+      text = logs[type][getRandom(18)].replace(
+        '[playerKick]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       ).replace(
-        '[playerDefence]',
-        '<b style="text-transform: uppercase">' + player2.name + '</b>'
+        '[playerDefence]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
       break;
-    case 'start':
-      text = logs['start'].replace(
-        '[time]',
-        '<b style="text-transform: uppercase">' + actionDate + '</b>'
+    case 'defence':
+      logs[type][getRandom(18)].replace(
+        'playerKick', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       ).replace(
-        '[player1]',
-        '<b style="text-transform: uppercase">' + player1.name + '</b>'
+        'playerDefence', '<b style="text-transform: uppercase">' + player1.name + '</b>'
+      )
+    case 'start':
+      text = logs[type].replace(
+        '[time]', '<b style="text-transform: uppercase">' + actionDate + '</b>'
+      ).replace(
+        '[player1]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       ).replace(
         '[player2]',
         '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
+      break;
+    case 'draw':
+      text = logs.draw
       break;
   }
   const el = '<p>'+text+'</p>';
@@ -198,15 +204,17 @@ $formFight.addEventListener('submit', function (event){
     player1.changeHP(enemy.value);
     player1.renderHP();
     generateLogs('hit', player2, player1);
+    console.log('!!! enemy.value', enemy.value)
   }
 
   if (enemy.defence !== player.hit){
-    player1.changeHP(player.value);
-    player1.renderHP();
+    player2.changeHP(player.value);
+    player2.renderHP();
     generateLogs('hit', player1, player2);
+    console.log('!!! player.value', player.value)
   }
 
-  player2.renderHP();
+  // player2.renderHP();
 
   showResult();
 })
