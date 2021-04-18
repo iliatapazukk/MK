@@ -152,9 +152,9 @@ function playerAttack () {
 const $chat = document.querySelector('.chat');
 const date = new Date();
 const actionDate = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ':'
-console.log(actionDate)
 
 function generateLogs(type, player1, player2) {
+  let el;
   let text;
   switch (type) {
     case 'hit':
@@ -163,13 +163,16 @@ function generateLogs(type, player1, player2) {
       ).replace(
         '[playerDefence]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
+      el = '<p>'+actionDate+text+' '+(-player2.hp)+' '+player1.hp+'</p>';
       break;
     case 'defence':
-      logs[type][getRandom(18)].replace(
-        'playerKick', '<b style="text-transform: uppercase">' + player2.name + '</b>'
+      logs[type][getRandom(8)].replace(
+        '[playerKick]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       ).replace(
-        'playerDefence', '<b style="text-transform: uppercase">' + player1.name + '</b>'
+        '[playerDefence]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       )
+      el = '<p>'+actionDate+text+'</p>';
+      break;
     case 'start':
       text = logs[type].replace(
         '[time]', '<b style="text-transform: uppercase">' + actionDate + '</b>'
@@ -179,12 +182,13 @@ function generateLogs(type, player1, player2) {
         '[player2]',
         '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
+      el = '<p>'+text+'</p>';
       break;
     case 'draw':
       text = logs.draw
+      el = '<p>'+text+'</p>';
       break;
   }
-  const el = '<p>'+text+'</p>';
   $chat.insertAdjacentHTML('afterbegin', el)
 }
 
@@ -204,17 +208,16 @@ $formFight.addEventListener('submit', function (event){
     player1.changeHP(enemy.value);
     player1.renderHP();
     generateLogs('hit', player2, player1);
-    console.log('!!! enemy.value', enemy.value)
+  } else {
+    generateLogs('defence', player2, player1);
   }
 
   if (enemy.defence !== player.hit){
     player2.changeHP(player.value);
     player2.renderHP();
     generateLogs('hit', player1, player2);
-    console.log('!!! player.value', player.value)
+  } else {
+    generateLogs('defence', player1, player2);
   }
-
-  // player2.renderHP();
-
   showResult();
 })
