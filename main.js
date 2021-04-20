@@ -158,7 +158,7 @@ function generateLogs(type, player1, player2) {
   let text;
   switch (type) {
     case 'hit':
-      text = logs[type][getRandom(18)].replace(
+      text = logs[type][getRandom(logs[type].length - 1)].replace(
         '[playerKick]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       ).replace(
         '[playerDefence]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
@@ -166,7 +166,7 @@ function generateLogs(type, player1, player2) {
       el = '<p>'+actionDate+text+' '+(-player2.hp)+' '+player1.hp+'</p>';
       break;
     case 'defence':
-      logs[type][getRandom(8)].replace(
+      logs[type][getRandom(logs[type].length - 1)].replace(
         '[playerKick]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       ).replace(
         '[playerDefence]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
@@ -188,6 +188,8 @@ function generateLogs(type, player1, player2) {
       text = logs.draw
       el = '<p>'+text+'</p>';
       break;
+    default:
+      el = '<p>'+'ничего не поймали'+'</p>';
   }
   $chat.insertAdjacentHTML('afterbegin', el)
 }
