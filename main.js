@@ -1,10 +1,14 @@
-function createElm(tag, className){
-  const $tag = document.createElement(tag);
-  if (className){
-    $tag.classList.add(className);
-  }
-  return $tag;
-}
+import logs from './modules/logs.js';
+import { player1, player2 } from './modules/players.js';
+import {
+  getRandom,
+  actionDate,
+  createElm,
+  createReloadButton,
+  showResultText,
+  $arenas
+} from './modules/utils.js';
+import { HIT, ATTACK } from './modules/battle.js'
 
 function createPlayer(playerObj){
   const $player = createElm('div', `player${playerObj.player}`)
@@ -29,81 +33,11 @@ function createPlayer(playerObj){
   return $player;
 }
 
-const $arenas = document.querySelector('.arenas');
-
-function elHP(){
-  return document.querySelector('.player' + this.player + ' .life');
-}
-
-function getRandom(num) {
-  return Math.ceil(Math.random() * num);
-}
-
-function renderHP(){
-  this.elHP().style.width = this.hp + '%';
-}
-
-function changeHP(changeHP) {
-  this.hp -= changeHP;
-  if (this.hp <= 0) {
-    this.hp = 0
-  }
-  return this.hp;
-}
-
-
-const player1 = {
-  player: 1,
-  name: 'sonya',
-  hp: 100,
-  elHP,
-  changeHP,
-  renderHP,
-}
-const player2 = {
-  player: 2,
-  name: 'subzero',
-  hp: 100,
-  elHP,
-  changeHP,
-  renderHP,
-}
-
 $arenas.appendChild(createPlayer(player1));
 $arenas.appendChild(createPlayer(player2));
 
-function showResultText(name){
- const $winsTitle = createElm('div', 'loseTitle');
- if (name) {
-   $winsTitle.innerText = `${name} wins`
- } else {
-   $winsTitle.innerText = `draw`
-   generateLogs('draw')
- }
- return $winsTitle;
-}
 
 const $formFight = document.querySelector('.control')
-
-const HIT = {
-  head: 30,
-  body: 25,
-  foot: 20,
-}
-const ATTACK = ['head', 'body', 'foot'];
-
-function createReloadButton() {
-  const $reloadBtnWrapper = createElm('div', 'reloadWrap');
-  const $reloadBtn = createElm('button', 'button');
-  $reloadBtn.innerText = 'Reload';
-
-  $reloadBtn.addEventListener('click', () => {
-    window.location.reload()
-  })
-
-  $reloadBtnWrapper.appendChild($reloadBtn);
-  $arenas.appendChild($reloadBtnWrapper)
-}
 
 function enemyAttack () {
   const hit = ATTACK[getRandom(3) - 1]
@@ -121,10 +55,13 @@ const $form = document.querySelector('.control');
 function showResult() {
   if (player1.hp === 0 && player1.hp < player2.hp) {
     $arenas.appendChild(showResultText(player2.name));
+    generateLogs('end', player2.name, player1.name)
   } else if (player2.hp === 0 && player2.hp < player1.hp) {
     $arenas.appendChild(showResultText(player1.name));
+    generateLogs('end', player1.name, player2.name)
   } else if (player1.hp === 0 && player2.hp === 0) {
     $arenas.appendChild(showResultText());
+    generateLogs('draw')
   }
 
   if (player1.hp === 0 || player2.hp === 0) {
@@ -150,28 +87,26 @@ function playerAttack () {
 }
 
 const $chat = document.querySelector('.chat');
-const date = new Date();
-const actionDate = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ':'
 
 function generateLogs(type, player1, player2) {
   let el;
   let text;
   switch (type) {
     case 'hit':
-      text = logs[type][getRandom(logs[type].length - 1)].replace(
+      text = logs[type][getRandom(logs[type].length - 1) - 1].replace(
         '[playerKick]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       ).replace(
         '[playerDefence]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
-      el = '<p>'+actionDate+text+' '+(-player2.hp)+' '+player1.hp+'</p>';
+      el = '<p><samp style="color: rgba(255,255,255,0.5)">'+actionDate+'</samp>'+' '+text+' '+(-player2.hp)+' '+player1.hp+'</p>';
       break;
     case 'defence':
-      logs[type][getRandom(logs[type].length - 1)].replace(
+      logs[type][getRandom(logs[type].length - 1) - 1].replace(
         '[playerKick]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
       ).replace(
         '[playerDefence]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
       )
-      el = '<p>'+actionDate+text+'</p>';
+      el = '<p><samp style="color: rgba(255,255,255,0.5)">'+actionDate+'</samp>'+' '+text+'</p>';
       break;
     case 'start':
       text = logs[type].replace(
@@ -182,6 +117,13 @@ function generateLogs(type, player1, player2) {
         '[player2]',
         '<b style="text-transform: uppercase">' + player2.name + '</b>'
       );
+      el = '<p>'+text+'</p>';
+      break;
+    case 'end':
+      console.log('end', type)
+      text = logs[type][getRandom(logs[type].length - 1)-1].replace(
+        '[playerWins]', '<b style="text-transform: uppercase; color: green;">' +player1+ '</b>'
+      ).replace('[playerLose]', '<b style="text-transform: uppercase; color: red;">' +player2+ '</b>');
       el = '<p>'+text+'</p>';
       break;
     case 'draw':
@@ -199,7 +141,7 @@ if (started) {
   generateLogs('start', player1, player2);
 }
 
-$formFight.addEventListener('submit', function (event){
+$formFight.addEventListener('submit',  (event) => {
   event.preventDefault();
 
   started = false
