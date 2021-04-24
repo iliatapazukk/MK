@@ -10,32 +10,28 @@ import {
 } from './modules/utils.js';
 import { HIT, ATTACK } from './modules/battle.js'
 
-function createPlayer(playerObj){
-  const $player = createElm('div', `player${playerObj.player}`)
+function createPlayer({player, name, hp}){
+  const $player = createElm('div', `player${player}`)
   const $progressbar = createElm('div', 'progressbar')
   const $character = createElm('div', 'character')
   const $characterImg = document.createElement('img')
-  $characterImg.setAttribute('src', `http://reactmarathon-api.herokuapp.com/assets/${playerObj.name}.gif`)
+  $characterImg.setAttribute('src', `http://reactmarathon-api.herokuapp.com/assets/${name}.gif`)
 
   $character.appendChild($characterImg);
   $player.appendChild($progressbar);
   $player.appendChild($character);
 
   const $life = createElm('div', 'life');
-  $life.style.width = `${playerObj.hp}%`;
+  $life.style.width = `${hp}%`;
 
   const $name = createElm('div', 'name');
-  $name.innerText = playerObj.name;
+  $name.innerText = name;
 
   $progressbar.appendChild($life);
   $progressbar.appendChild($name);
 
   return $player;
 }
-
-$arenas.appendChild(createPlayer(player1));
-$arenas.appendChild(createPlayer(player2));
-
 
 const $formFight = document.querySelector('.control')
 
@@ -55,10 +51,10 @@ const $form = document.querySelector('.control');
 function showResult() {
   if (player1.hp === 0 && player1.hp < player2.hp) {
     $arenas.appendChild(showResultText(player2.name));
-    generateLogs('end', player2.name, player1.name)
+    generateLogs('end', player2, player1)
   } else if (player2.hp === 0 && player2.hp < player1.hp) {
     $arenas.appendChild(showResultText(player1.name));
-    generateLogs('end', player1.name, player2.name)
+    generateLogs('end', player1, player2)
   } else if (player1.hp === 0 && player2.hp === 0) {
     $arenas.appendChild(showResultText());
     generateLogs('draw')
@@ -88,70 +84,69 @@ function playerAttack () {
 
 const $chat = document.querySelector('.chat');
 
-function generateLogs(type, player1, player2) {
-  let el;
-  let text;
+function getTextLog(type, player1Name, player2Name){
   switch (type) {
+    case 'start':
+      return logs[type]
+        .replace('[time]', `<b style="text-transform: uppercase">${actionDate}</b>`)
+        .replace('[player1]', `<b style="text-transform: uppercase">${player1Name}</b>`)
+        .replace('[player2]',`<b style="text-transform: uppercase">${player2Name}</b>`);
+      break;
     case 'hit':
-      text = logs[type][getRandom(logs[type].length - 1) - 1].replace(
-        '[playerKick]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
-      ).replace(
-        '[playerDefence]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
-      );
-      el = '<p><samp style="color: rgba(255,255,255,0.5)">'+actionDate+'</samp>'+' '+text+' '+(-player2.hp)+' '+player1.hp+'</p>';
+      return logs[type][getRandom(logs[type].length - 1) - 1]
+        .replace('[playerKick]', `<b style="text-transform: uppercase">${player1Name}</b>`)
+        .replace('[playerDefence]', `<b style="text-transform: uppercase">${player2Name}</b>`);
       break;
     case 'defence':
-      logs[type][getRandom(logs[type].length - 1) - 1].replace(
-        '[playerKick]', '<b style="text-transform: uppercase">' + player2.name + '</b>'
-      ).replace(
-        '[playerDefence]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
-      )
-      el = '<p><samp style="color: rgba(255,255,255,0.5)">'+actionDate+'</samp>'+' '+text+'</p>';
-      break;
-    case 'start':
-      text = logs[type].replace(
-        '[time]', '<b style="text-transform: uppercase">' + actionDate + '</b>'
-      ).replace(
-        '[player1]', '<b style="text-transform: uppercase">' + player1.name + '</b>'
-      ).replace(
-        '[player2]',
-        '<b style="text-transform: uppercase">' + player2.name + '</b>'
-      );
-      el = '<p>'+text+'</p>';
+      return logs[type][getRandom(logs[type].length - 1) - 1]
+        .replace('[playerKick]', `<b style="text-transform: uppercase">${player2Name}</b>`)
+        .replace('[playerDefence]', `<b style="text-transform: uppercase"> ${player1Name}</b>`)
       break;
     case 'end':
-      console.log('end', type)
-      text = logs[type][getRandom(logs[type].length - 1)-1].replace(
-        '[playerWins]', '<b style="text-transform: uppercase; color: green;">' +player1+ '</b>'
-      ).replace('[playerLose]', '<b style="text-transform: uppercase; color: red;">' +player2+ '</b>');
-      el = '<p>'+text+'</p>';
+      return logs[type][getRandom(logs[type].length - 1)-1].replace(
+        '[playerWins]', `<b style="text-transform: uppercase; color: green;">${player1Name}</b>`
+      ).replace('[playerLose]', `<b style="text-transform: uppercase; color: red;">${player2Name}</b>`);
       break;
     case 'draw':
-      text = logs.draw
-      el = '<p>'+text+'</p>';
+      return logs.draw
       break;
     default:
-      el = '<p>'+'ничего не поймали'+'</p>';
+      return 'ничего не поймали'
   }
-  $chat.insertAdjacentHTML('afterbegin', el)
 }
 
-let started = true
-if (started) {
-  generateLogs('start', player1, player2);
+function generateLogs(type, player1, player2, valueAttack) {
+  let text = getTextLog(type, player1.name, player2.name)
+
+  switch (type){
+    case 'hit':
+      text = `<samp style="color: rgba(255,255,255,0.5)">${actionDate}</samp> 
+              ${text}
+              <samp style="color: rgba(255,255,255,0.5)">-${valueAttack} [${player2.hp}/100]</samp>`
+      break;
+    case 'defence':
+      text = `<samp style="color: rgba(255,255,255,0.5)">${actionDate}</samp> ${text}`
+      break;
+    case 'end':
+    case 'draw':
+      text = `<samp style="color: rgba(255,255,255,0.5)">${actionDate}</samp> ${text}`
+      break;
+  }
+
+  const el = `<p>${text}</p>`;
+  $chat.insertAdjacentHTML('afterbegin', el)
 }
 
 $formFight.addEventListener('submit',  (event) => {
   event.preventDefault();
 
-  started = false
   const enemy = enemyAttack()
   const player = playerAttack()
 
   if (player1.defence !== enemy.hit){
     player1.changeHP(enemy.value);
     player1.renderHP();
-    generateLogs('hit', player2, player1);
+    generateLogs('hit', player2, player1, enemy.value);
   } else {
     generateLogs('defence', player2, player1);
   }
@@ -159,9 +154,17 @@ $formFight.addEventListener('submit',  (event) => {
   if (enemy.defence !== player.hit){
     player2.changeHP(player.value);
     player2.renderHP();
-    generateLogs('hit', player1, player2);
+    generateLogs('hit', player1, player2, player.value);
   } else {
     generateLogs('defence', player1, player2);
   }
   showResult();
 })
+
+const init = () => {
+  generateLogs('start', player1, player2);
+  $arenas.appendChild(createPlayer(player1));
+  $arenas.appendChild(createPlayer(player2));
+}
+
+init();
