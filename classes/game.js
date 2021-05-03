@@ -1,5 +1,5 @@
 import logs from '../modules/logs.js';
-import { player1, player2 } from './players.js';
+import Player from './players.js';
 import {
   getRandom,
   actionDate,
@@ -11,7 +11,29 @@ import {
 import { HIT, ATTACK } from '../modules/battle.js'
 
 class Game{
-  start = () => {
+  getPlayers = async () => {
+  const body = fetch('https://reactmarathon-api.herokuapp.com/api/mk/players').then(response => response.json());
+  return body;
+  }
+  start = async () => {
+    const players = await this.getPlayers();
+
+    const p1 = players[getRandom(players.length) - 1]
+    const p2 = players[getRandom(players.length) - 1]
+
+    console.log(p1, p2);
+
+    const player1 = new Player({
+      ...p1,
+      player: 1,
+      rootSelector: 'arenas'
+    })
+    const player2 = new Player({
+      ...p2,
+      player: 2,
+      rootSelector: 'arenas'
+    })
+
     const $formFight = document.querySelector('.control')
     // init attack
     const enemyAttack = () => {
@@ -136,15 +158,10 @@ class Game{
       }
       showResult();
     })
+    player1.createPlayer();
+    player2.createPlayer();
+    generateLogs('start', player1, player2);
 
-    const init = () => {
-      generateLogs('start', player1, player2);
-      player1.createPlayer();
-      player2.createPlayer();
-      // $arenas.appendChild(createPlayer(player1));
-      // $arenas.appendChild(createPlayer(player2));
-    }
-    init();
   }
 }
 

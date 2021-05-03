@@ -4,6 +4,7 @@ class Player{
   constructor(props) {
     this.name = props.name;
     this.hp = props.hp;
+    this.img = props.img;
     this.player = props.player;
     this.selector = `player${this.player}`;
     this.rootSelector = props.rootSelector;
@@ -28,7 +29,7 @@ class Player{
     const $progressbar = createElm('div', 'progressbar')
     const $character = createElm('div', 'character')
     const $characterImg = document.createElement('img')
-    $characterImg.setAttribute('src', `http://reactmarathon-api.herokuapp.com/assets/${this.name}.gif`)
+    $characterImg.setAttribute('src', this.img)
 
     $character.appendChild($characterImg);
     $player.appendChild($progressbar);
@@ -50,16 +51,4 @@ class Player{
 
 }
 
-export const player1 = new Player({
-  player: 1,
-  name: 'sonya',
-  hp: 100,
-  rootSelector: 'arenas',
-})
-
-export const player2 = new Player({
-  player: 2,
-  name: 'subzero',
-  hp: 100,
-  rootSelector: 'arenas',
-})
+export default Player;
